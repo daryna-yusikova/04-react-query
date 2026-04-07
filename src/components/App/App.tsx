@@ -16,7 +16,7 @@ function App() {
   const [page, setCurrentPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  const { data, error, isLoading, isError, isSuccess } = useQuery({
+  const { data, isLoading, isError} = useQuery({
     queryKey: ["Movies", submitQuery, page,],
     queryFn: () => fetchMovies(submitQuery, page),
      enabled: submitQuery !== '',
@@ -34,11 +34,8 @@ function App() {
     }
     setSubmitQuery(submitQuery)
     setCurrentPage(1);
-    
-    if (data.results.length === 0) {
-  toast.error('No movies found')
-}
-   
+
+  
   }
 
   //   try {
