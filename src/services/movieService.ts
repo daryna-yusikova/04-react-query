@@ -19,6 +19,6 @@ export default async function fetchMovies(searchQuery: string, page: number): Pr
         if (searchResult.data.results.length === 0) {
             return null;
         };
-        return searchResult.data;
+        return searchResult.data
     } catch (error){ toast.error('something went wrong'); throw error}
 }

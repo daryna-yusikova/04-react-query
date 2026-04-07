@@ -8,7 +8,7 @@ import Loader from '../Loader/Loader'
 import ErrorMessage from '../ErrorMessage/ErrorMessage'
 import MovieModal from '../MovieModal/MovieModal'
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import ReactPaginate from 'react-paginate'
+import Pagination from '../Pagination/Pagination'
 
 
 function App() {
@@ -16,23 +16,26 @@ function App() {
   const [page, setCurrentPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  const { data, isLoading, isError, isFetching } = useQuery({
+  const { data, isLoading, isError, isFetched } = useQuery({
     queryKey: ["Movies", submitQuery, page],
     queryFn: () => fetchMovies(submitQuery, page),
     enabled: submitQuery !== '',
     placeholderData: keepPreviousData,
   });
 
-useEffect(() => {
-  if (
-    submitQuery &&
-    !isFetching &&
-    data?.results?.length === 0
-  ) {
-    toast.error('No movies found for your request')
-  }
-}, [data, isFetching, submitQuery])
+  useEffect(() => {
+
+    if ( isFetched &&
+      data === null
+    ) {
+      toast.error('No movies found for your request')
+    }
+  }, [data,submitQuery])
   
+
+
+
+
   async function FormHandler(submitQuery: string) {
 
     if (submitQuery === '') {
@@ -41,7 +44,6 @@ useEffect(() => {
     }
     setSubmitQuery(submitQuery)
     setCurrentPage(1);
-
   
   }
 
@@ -80,30 +82,30 @@ useEffect(() => {
 
       <SearchBar onSubmit={FormHandler} />
 
-      {isLoading && <Loader />}
+      {isLoading && !data && <Loader />}
       {isError && <ErrorMessage />}
 
-{data && data.total_pages > 1 && (
-  <ReactPaginate
-    pageCount={data.total_pages}
-    pageRangeDisplayed={5}
-    marginPagesDisplayed={2}
-    onPageChange={(event) => setCurrentPage(event.selected + 1)}
-    forcePage={page - 1}
-    containerClassName="pagination"
-    activeClassName="active"
-  />
-)}
-      {data && data.results?.length > 0 && (
-        <MovieGrid onSelect={movieGridHandler} movies={data.results} />
+      {data && data.total_pages > 1 && (
+        <Pagination
+     totalPages={data.total_pages} page={page} setPage={setCurrentPage}
+        />
       )}
 
+      {data?.results && (
+        <MovieGrid
+          onSelect={movieGridHandler}
+          movies={data.results}
+        />
+      )}
 
       {selectedMovie && (
-        <MovieModal movie={selectedMovie} onClose={closeModalHandler} />
+        <MovieModal
+          movie={selectedMovie}
+          onClose={closeModalHandler}
+        />
       )}
     </>
   )
 }
-
+      
 export default App
