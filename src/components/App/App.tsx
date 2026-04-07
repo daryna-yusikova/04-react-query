@@ -7,41 +7,61 @@ import MovieGrid from '../MovieGrid/MovieGrid'
 import Loader from '../Loader/Loader'
 import ErrorMessage from '../ErrorMessage/ErrorMessage'
 import MovieModal from '../MovieModal/MovieModal'
+import Pagination from '../Pagination/Pagination'
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+
 
 function App() {
-  const [moviesList, setMoviesList] = useState<Movie[]>([])
-  const [loader, setLoader] = useState<boolean>(false)
-  const [hasError, setHasError] = useState<boolean>(false)
+  const [submitQuery, setSubmitQuery] = useState<string>('')
+  const [page, setCurrentPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
+  const { data, error, isLoading, isError, isSuccess } = useQuery({
+    queryKey: ["Movies", submitQuery, page,],
+    queryFn: () => fetchMovies(submitQuery, page),
+     enabled: submitQuery !== '',
+    placeholderData: keepPreviousData,
+  });
+
+  console.log(data);
+
+
   async function FormHandler(submitQuery: string) {
-    setMoviesList([])
-    setHasError(false)
 
     if (submitQuery === '') {
       toast.error('Please enter your search query.')
       return
     }
-
-    setLoader(true)
-
-    try {
-      const movies: Movie[] | null = await fetchMovies(submitQuery)
-
-      if (movies === null) {
-        setMoviesList([])
-        toast.error('No movies found for your request.')
-      } else {
-        setMoviesList(movies)
-      }
-    } catch (err) {
-      setHasError(true)
-    } finally {
-      setLoader(false)
-    }
+    setSubmitQuery(submitQuery)
+    setCurrentPage(1);
+    
+    if (data.results.length === 0) {
+  toast.error('No movies found')
+}
+   
   }
 
-  // ✅ головне виправлення
+  //   try {
+  //     const movies: Movie[] | null = await fetchMovies(submitQuery)
+
+  //     if (movies === null) {
+  //       setMoviesList([])
+  //       toast.error('No movies found for your request.')
+  //     } else {
+  //       setMoviesList(movies)
+  //     }
+  //   } catch (err) {
+  //     setHasError(true)
+  //   } finally {
+  //     setLoader(false)
+  //   }
+  // }
+
+
+    
+    
+    
+
   function movieGridHandler(movie: Movie) {
     setSelectedMovie(movie)
   }
@@ -56,12 +76,16 @@ function App() {
 
       <SearchBar onSubmit={FormHandler} />
 
-      {loader && <Loader />}
-      {hasError && <ErrorMessage />}
+      {isLoading && <Loader />}
+      {isError && <ErrorMessage />}
 
-      {moviesList.length > 0 && (
-        <MovieGrid onSelect={movieGridHandler} movies={moviesList} />
+      {data && <Pagination totalPages={data.total_pages} page={page} setPage={setCurrentPage} />
+      }
+
+      {data && (
+        <MovieGrid onSelect={movieGridHandler} movies={data.results} />
       )}
+
 
       {selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={closeModalHandler} />
