@@ -1,0 +1,21 @@
+import axios from "axios";
+import type { Movie } from "../types/movie";
+import toast from "react-hot-toast";
+interface MovieArray{
+    results: Movie[]
+}
+export default async function fetchMovies(searchQuery: string): Promise<Movie[] | null> {
+    try {
+        const searchResult = await axios.get<MovieArray>('https://api.themoviedb.org/3/search/movie', {
+            headers: {
+                Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
+            }, params: {
+                query: searchQuery,
+            }
+        })
+        if (searchResult.data.results.length === 0) {
+            return null;
+        };
+        return searchResult.data.results;
+    } catch (error){ toast.error('something went wrong'); throw error}
+}
